@@ -1,0 +1,14 @@
+<application xmlns="http://ns.adobe.com/air/application/32.0" minimumPatchLevel="0">
+    <id>ProdMafia</id>
+    <filename>ProdMafia</filename>
+    <name>ProdMafia</name>
+    <versionNumber>2.0</versionNumber>
+    <initialWindow>
+        <content>ProdMafia.dll</content>
+        <title>ProdMafia 2.0</title>
+        <visible>true</visible>
+        <renderMode>direct</renderMode>
+    </initialWindow>
+    <supportedProfiles>desktop extendedDesktop</supportedProfiles>
+    <gpuPreference>discrete</gpuPreference>
+</application>

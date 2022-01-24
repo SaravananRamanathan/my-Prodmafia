@@ -1,0 +1,14 @@
+{
+  "name": "prodmafia",
+  "version": "2.0",
+  "appDescriptor": "src/application.xml",
+  "variables": {
+  },
+  "airDotPrefix": true,
+  "repository": {
+    "url": "https://abrn.github.io/prodmafia-assets/air_packages.json"
+  },
+  "dependencies": {
+    
+  }
+}

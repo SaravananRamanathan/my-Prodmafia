@@ -1,0 +1,93 @@
+package io.decagames.rotmg.seasonalEvent.tasks {
+    import io.decagames.rotmg.seasonalEvent.SeasonalLeaderBoard.SeasonalItemDataFactory;
+    import io.decagames.rotmg.seasonalEvent.SeasonalLeaderBoard.SeasonalLeaderBoardItemData;
+    import io.decagames.rotmg.seasonalEvent.data.SeasonalEventModel;
+    import io.decagames.rotmg.seasonalEvent.signals.SeasonalLeaderBoardErrorSignal;
+    
+    import kabam.lib.tasks.BaseTask;
+    import kabam.rotmg.account.core.Account;
+    import kabam.rotmg.appengine.api.AppEngineClient;
+    import kabam.rotmg.core.model.PlayerModel;
+    import kabam.rotmg.legends.model.LegendFactory;
+    
+    public class GetLegacyChallengerListTask extends BaseTask {
+        
+        
+        public function GetLegacyChallengerListTask() {
+            super();
+        }
+        
+        [Inject]
+        public var account: Account;
+        [Inject]
+        public var client: AppEngineClient;
+        [Inject]
+        public var player: PlayerModel;
+        [Inject]
+        public var seasonalEventModel: SeasonalEventModel;
+        [Inject]
+        public var factory: LegendFactory;
+        [Inject]
+        public var seasonalItemDataFactory: SeasonalItemDataFactory;
+        [Inject]
+        public var seasonId: String;
+        [Inject]
+        public var isTop20: Boolean;
+        [Inject]
+        public var seasonalLeaderBoardErrorSignal: SeasonalLeaderBoardErrorSignal;
+        public var charId: int;
+        
+        override protected function startTask(): void {
+            this.client.complete.addOnce(this.onComplete);
+            if (this.seasonId != "" && this.seasonId != null) {
+                if (this.isTop20) {
+                    this.client.sendRequest("/fame/challengerLeaderboard?season=" + this.seasonId, this.makeRequestObject());
+                } else {
+                    this.client.sendRequest("/fame/challengerAccountLeaderboard?season=" + this.seasonId + "&account=" + this.account.getUserName(), this.makeRequestObject());
+                }
+            }
+        }
+        
+        private function onComplete(_arg_1: Boolean, _arg_2: *): void {
+            if (_arg_1) {
+                this.updateFameListData(_arg_2);
+            } else {
+                this.onFameListError(_arg_2);
+            }
+        }
+        
+        private function onFameListError(_arg_1: String): void {
+            this.seasonalLeaderBoardErrorSignal.dispatch(_arg_1);
+            completeTask(true);
+        }
+        
+        private function updateFameListData(_arg_1: String): void {
+            var _local2: XML = XML(_arg_1);
+            var _local3: Vector.<SeasonalLeaderBoardItemData> = this.seasonalItemDataFactory.createSeasonalLeaderBoardItemDatas(XML(_arg_1));
+            if (this.isTop20) {
+                this.seasonalEventModel.leaderboardLegacyTop20ItemDatas = _local3;
+            } else {
+                _local3.sort(this.fameSort);
+                this.seasonalEventModel.leaderboardLegacyPlayerItemDatas = _local3;
+            }
+            completeTask(true);
+        }
+        
+        private function fameSort(_arg_1: SeasonalLeaderBoardItemData, _arg_2: SeasonalLeaderBoardItemData): int {
+            if (_arg_1.totalFame > _arg_2.totalFame) {
+                return -1;
+            }
+            if (_arg_1.totalFame < _arg_2.totalFame) {
+                return 1;
+            }
+            return 0;
+        }
+        
+        private function makeRequestObject(): Object {
+            var _local1: * = {};
+            _local1.accountId = this.player.getAccountId();
+            _local1.charId = this.charId;
+            return _local1;
+        }
+    }
+}
